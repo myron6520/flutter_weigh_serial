@@ -44,12 +44,11 @@ class _MyAppState extends State<MyApp> {
       (success) {
         if (success) {
           Fluttertoast.showToast(msg: '称重设备连接成功');
-          _subscription = weighSerialProvider.weighListener?.listen(
+          _subscription = weighSerialProvider.readStream.listen(
             (data) {
               log('称重数据 - ${data.toMap().toString()}');
               setState(() {
-                weighData =
-                    '${data.weight} kg (${data.isStable ? '稳定' : '不稳定'})';
+                weighData = '${data.weight} g (${data.isStable ? '稳定' : '不稳定'})';
               });
             },
           );
@@ -74,9 +73,7 @@ class _MyAppState extends State<MyApp> {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              weighSerialProvider.isConnect
-                  ? Text('已连接 - 称重数据: $weighData')
-                  : const Text('未连接'),
+              Text('已连接 - 称重数据: $weighData'),
               const SizedBox(height: 15),
               TextButton(
                 onPressed: _connectWeigh,

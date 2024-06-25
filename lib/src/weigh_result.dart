@@ -2,7 +2,7 @@ import 'dart:convert';
 
 /// 称重结果
 class WeighResult {
-  /// 重量  单位是kg
+  /// 重量  单位是g
   final double weight;
 
   /// 结果是否稳定  稳定：true  不稳定： false
@@ -39,8 +39,7 @@ class WeighResult {
 
   String toJson() => json.encode(toMap());
 
-  factory WeighResult.fromJson(String source) =>
-      WeighResult.fromMap(json.decode(source));
+  factory WeighResult.fromJson(String source) => WeighResult.fromMap(json.decode(source));
 
   @override
   String toString() => 'WeighResultModel(weight: $weight, isStable: $isStable)';
@@ -49,9 +48,7 @@ class WeighResult {
   bool operator ==(Object other) {
     if (identical(this, other)) return true;
 
-    return other is WeighResult &&
-        other.weight == weight &&
-        other.isStable == isStable;
+    return other is WeighResult && other.weight == weight && other.isStable == isStable;
   }
 
   @override

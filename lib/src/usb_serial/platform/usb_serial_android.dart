@@ -1,5 +1,7 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:usb_serial/usb_serial.dart' as usb_serial_lib;
 import '../../device_model/platform/android_usb_device.dart';
 import '../../device_model/usb_serial_device.dart';
