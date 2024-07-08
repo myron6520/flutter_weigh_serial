@@ -33,6 +33,9 @@ class WeighSerialProvider {
     await close();
     final devices = await serialFactory.usbSerial.getAvailablePorts();
     for (var weighDevice in devices) {
+      if (!weighDevice.isWeighDevice) {
+        continue;
+      }
       UsbSerial? serial;
       if (Platform.isAndroid) {
         serial = UsbSerialAndroid();
@@ -61,20 +64,24 @@ class WeighSerialProvider {
 
   WeighResult? parseDHData(Uint8List event) {
     try {
-      final originalStr = ascii.decode(event.where((element) => element != 0x0 && element != 0x0A && element != 0x0D).toList()).trim();
-      List<String> arr = originalStr.split(" ");
-      double weight = double.tryParse(arr.first) ?? 0;
-      if (arr.length > 1) {
-        double price = double.tryParse(arr[1]) ?? 0;
-      }
-      if (arr.length > 2) {
-        double cost = double.tryParse(arr[2]) ?? 0;
-      }
+      if (event.length > 2 && event[0] == 0x0A && event[1] == 0x0D) {
+        debugPrint("event: ${event.toString()}");
+        final originalStr = ascii.decode(event.where((element) => element != 0x0 && element != 0x0A && element != 0x0D).toList()).trim();
+        List<String> arr = originalStr.split(" ");
+        double weight = double.tryParse(arr.first) ?? 0;
+        if (arr.length > 1) {
+          double price = double.tryParse(arr[1]) ?? 0;
+        }
+        if (arr.length > 2) {
+          double cost = double.tryParse(arr[2]) ?? 0;
+        }
 
-      return WeighResult(
-        isStable: true,
-        weight: weight,
-      );
+        return WeighResult(
+          isStable: true,
+          weight: weight,
+        );
+      }
+      return null;
     } catch (e) {}
     return null;
   }
