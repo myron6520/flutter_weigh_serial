@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_weigh_serial/src/device_model/usb_serial_device_ex.dart';
@@ -8,6 +9,7 @@ import 'package:flutter_weigh_serial/src/extension/usb_serial_ex.dart';
 import 'package:dartx/dartx.dart';
 import 'package:flutter_weigh_serial/src/usb_serial/platform/usb_serial_android.dart';
 import 'package:flutter_weigh_serial/src/usb_serial/platform/usb_serial_windows.dart';
+import 'package:flutter_weigh_serial/src/weight_frame.dart';
 import '../flutter_weigh_serial.dart';
 import 'package:usb_serial/usb_serial.dart' as usb_serial_lib;
 
@@ -46,11 +48,19 @@ class WeighSerialProvider {
 
       if (serial != null) {
         try {
-          serial.readStream.listen((event) {
-            WeighResult? res = parseDHData(event) ?? parseDJData(event);
+          WeightParser.instance.onGetWeightFrame = (frame) {
+            WeighResult? res =
+                parseDHData(frame.data) ?? parseDJData(frame.data);
             if (res != null) {
               controller.sink.add(res);
             }
+          };
+          serial.readStream.listen((event) {
+            WeightParser.instance.addData(event);
+            // WeighResult? res = parseDHData(event) ?? parseDJData(event);
+            // if (res != null) {
+            //   controller.sink.add(res);
+            // }
           });
           await serial.create(weighDevice);
           await serial.open();
@@ -62,11 +72,16 @@ class WeighSerialProvider {
     return _ports.isNotEmpty;
   }
 
-  WeighResult? parseDHData(Uint8List event) {
+  WeighResult? parseDHData(List<int> event) {
     try {
       if (event.length > 2 && event[0] == 0x0A && event[1] == 0x0D) {
         debugPrint("event: ${event.toString()}");
-        final originalStr = ascii.decode(event.where((element) => element != 0x0 && element != 0x0A && element != 0x0D).toList()).trim();
+        final originalStr = ascii
+            .decode(event
+                .where((element) =>
+                    element != 0x0 && element != 0x0A && element != 0x0D)
+                .toList())
+            .trim();
         List<String> arr = originalStr.split(" ");
         double weight = double.tryParse(arr.first) ?? 0;
         if (arr.length > 1) {
@@ -86,7 +101,7 @@ class WeighSerialProvider {
     return null;
   }
 
-  WeighResult? parseDJData(Uint8List event) {
+  WeighResult? parseDJData(List<int> event) {
     try {
       final originalStr = utf8.decode(event);
       debugPrint("originalStr:$originalStr");
@@ -99,7 +114,11 @@ class WeighSerialProvider {
         unit = 1;
       }
 
-      var resultStr = originalStr.substring(0, lastIndex).replaceAll(' ', '').replaceAll(RegExp(r'[A-Za-z]'), '').replaceAll(RegExp(r'[^0-9.-]'), '');
+      var resultStr = originalStr
+          .substring(0, lastIndex)
+          .replaceAll(' ', '')
+          .replaceAll(RegExp(r'[A-Za-z]'), '')
+          .replaceAll(RegExp(r'[^0-9.-]'), '');
       final weight = double.tryParse(resultStr.trim()) ?? 0;
       return WeighResult(
         isStable: stable,
