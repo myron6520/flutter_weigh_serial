@@ -65,9 +65,11 @@ class WeightParser {
       }
       //"g"
       if (f == 0x67) {
-        if (sIndex >= 0) {
+        if (sIndex >= 0 && sIndex < i) {
+          debugPrint("sIndex:$sIndex");
+          debugPrint("i:$i");
           frame = WeightFrame(type: ProtocolType.DING_JIAN);
-          frame.addAllData(data.sublist(sIndex, i + 1));
+          frame.addAllData(_data.sublist(sIndex, i + 1));
           _data = _data.sublist(i);
           onGetWeightFrame?.call(frame);
           break;
