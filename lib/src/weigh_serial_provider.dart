@@ -23,19 +23,31 @@ class WeighSerialProvider {
       if (event.event == usb_serial_lib.UsbEvent.ACTION_USB_ATTACHED) {
         findAndConnect();
       }
+      if (event.event == usb_serial_lib.UsbEvent.ACTION_USB_DETACHED) {
+        event.device?.port?.close();
+      }
     });
   }
   final List<UsbSerial> _ports = [];
+  UsbSerial? getPort(UsbSerialDevice device) {
+    return _ports.firstOrNullWhere((element) =>
+        element.selectedDevice?.pId == device.pId &&
+        element.selectedDevice?.vId == device.vId);
+  }
+
   final controller = StreamController<WeighResult>.broadcast();
 
   /// 用于监听输出流
   Stream<WeighResult> get readStream => controller.stream;
   // 第一步，初始化, 并连接称重设备
   Future<bool> findAndConnect() async {
-    await close();
+    // await close();
     final devices = await serialFactory.usbSerial.getAvailablePorts();
     for (var weighDevice in devices) {
       if (!weighDevice.isWeighDevice) {
+        continue;
+      }
+      if (getPort(weighDevice)?.isOpen() ?? false) {
         continue;
       }
       UsbSerial? serial;
