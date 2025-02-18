@@ -1,5 +1,5 @@
 name: flutter_weigh_serial
-description: 提供电子秤数据获取能力，支持 Android、Windows 平台。
+description: Provides electronic scale data acquisition capability, supporting Android and Windows platforms.
 version: 1.0.0+2
 author: lixiaohong<liyufengisme@gmail.com>
 homepage: https://github.com/liyufengrex/flutter_weigh_serial
